@@ -2,63 +2,152 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>타이머</title>
+    <title>⏱️ 뽀모도로 타이머</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 30px 0;
+        }
+    </style>
 </head>
-<body class="bg-light text-center p-5">
+<body class="bg-light p-4 text-center">
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="main.html">Pomodoro</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link text-white" href="timer.html">⏱ 타이머</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="set-goal.html">🎯 목표 설정</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="progress.html">📈 진행 상태</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="statistics.html">📊 통계</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="settings.html">⚙ 설정</a></li>
                 <li class="nav-item">
-                    <a class="nav-link active text-white" href="timer.html">⏱ 타이머</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="set-goal.html">🎯 목표 설정</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="progress.html">📈 진행 상태</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="statistics.html">📊 통계 보기</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="settings.html">⚙ 설정</a>
+                    <button class="btn btn-outline-light ms-3" id="logoutBtn">🚪 로그아웃</button>
                 </li>
             </ul>
-            <!-- 로그인/로그아웃 영역 -->
-            <ul class="navbar-nav ms-auto">
-                <!-- 로그인 상태가 아니면 로그인 버튼 -->
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="login.html">🔐 로그인</a>
-                </li>
-
-                <!-- 로그인 상태일 때는 로그아웃 (아래 줄을 사용하려면 로그인 처리 로직 필요) -->
-                <!--
-                <li class="nav-item">
-                  <span class="navbar-text text-white me-2">홍길동님</span>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link text-white" href="logout.html">🚪 로그아웃</a>
-                </li>
-                -->
         </div>
     </div>
 </nav>
 
+<div class="container">
+    <h2>⏱️ 뽀모도로 타이머</h2>
 
-<h2>⏱️ 뽀모도로 타이머</h2>
-<div class="display-1 my-4" id="timer">25:00</div>
-<div class="btn-group">
-    <button class="btn btn-success">시작</button>
-    <button class="btn btn-warning">일시정지</button>
-    <button class="btn btn-danger">리셋</button>
+    <!-- 모티베이션 메시지 -->
+    <p id="motivation" class="text-primary fw-bold"></p>
+
+    <div class="timer-display" id="timer">25:00</div>
+
+    <div class="btn-group my-3">
+        <button class="btn btn-success" onclick="startTimer()">시작</button>
+        <button class="btn btn-warning" onclick="pauseTimer()">일시정지</button>
+        <button class="btn btn-secondary" onclick="resetTimer()">리셋</button>
+    </div>
+
+    <!-- 세션 메모 -->
+    <textarea id="sessionNote" class="form-control mt-4" placeholder="세션 후 메모 (선택)" rows="3"></textarea>
+    <p class="text-success mt-2 fw-bold" id="sessionMessage"></p>
 </div>
+
+<!-- 타이머 완료 시 알림 사운드 -->
+<audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<script>
+    let defaultFocus = parseInt(localStorage.getItem('system_focus_time')) || 25;
+    let focusTime = defaultFocus * 60;
+    let timeLeft = focusTime;
+    let timerDisplay = document.getElementById('timer');
+    let interval = null;
+    let sessionCount = parseInt(localStorage.getItem('session_completed')) || 0;
+    const sessionMessage = document.getElementById('sessionMessage');
+    const noteBox = document.getElementById('sessionNote');
+    const motivation = document.getElementById('motivation');
+    const sound = document.getElementById('alertSound');
+
+    const messages = [
+        "🔥 오늘도 한 걸음 더!",
+        "💪 집중은 습관입니다.",
+        "🚀 할 수 있어요, 지금!",
+        "🌟 당신은 성장 중입니다!",
+        "🧘 잠깐의 집중이 큰 차이를 만듭니다!"
+    ];
+
+    function showMotivation() {
+        const random = Math.floor(Math.random() * messages.length);
+        motivation.textContent = messages[random];
+    }
+
+    function updateDisplay() {
+        let min = Math.floor(timeLeft / 60);
+        let sec = timeLeft % 60;
+        timerDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (interval) return;
+        showMotivation();
+
+        interval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                interval = null;
+                completeSession();
+            } else {
+                timeLeft--;
+                updateDisplay();
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(interval);
+        interval = null;
+    }
+
+    function resetTimer() {
+        clearInterval(interval);
+        interval = null;
+        timeLeft = focusTime;
+        updateDisplay();
+        sessionMessage.textContent = '';
+        noteBox.value = '';
+    }
+
+    function completeSession() {
+        sessionCount += 1;
+        localStorage.setItem('session_completed', sessionCount);
+
+        //  메모 저장
+        const note = noteBox.value.trim();
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(`session_${today}_${sessionCount}`, JSON.stringify({
+            duration: defaultFocus,
+            completedAt: new Date(),
+            note: note
+        }));
+
+        //  알림 + 사운드
+        sound.play();
+        alert("🎉 세션 완료! 다음 휴식을 준비하세요.");
+
+        // 짧은/긴 휴식 자동 분기
+        if (sessionCount % 4 === 0) {
+            timeLeft = 15 * 60; // 긴 휴식 15분
+            sessionMessage.textContent = "💤 긴 휴식 타이머가 시작됩니다 (15분)";
+        } else {
+            timeLeft = 5 * 60; // 짧은 휴식
+            sessionMessage.textContent = "☕ 짧은 휴식 타이머가 시작됩니다 (5분)";
+        }
+
+        updateDisplay();
+        noteBox.value = '';
+    }
+
+    updateDisplay(); // 최초 화면 표시
+</script>
+
 </body>
 </html>

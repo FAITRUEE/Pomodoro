@@ -2,53 +2,36 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>관리자 전용 페이지</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>관리자 페이지</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light p-4">
 
-<!-- 관리자 네비게이션 -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="#">Admin Panel</a>
     <ul class="navbar-nav ms-auto">
       <li class="nav-item">
-        <a class="nav-link text-white" href="main.html">⏎ 사용자 화면으로</a>
+        <a class="nav-link text-white" href="main.html">⏎ 사용자 화면</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link text-white" href="logout.html">🚪 로그아웃</a>
+        <a class="nav-link text-white" href="login.html">🚪 로그아웃</a>
       </li>
     </ul>
   </div>
 </nav>
 
 <div class="container">
-  <h2 class="mb-4">👤 사용자 관리</h2>
-
+  <h2 class="mb-4">👥 사용자 목록</h2>
   <table class="table table-bordered bg-white">
     <thead class="table-dark">
     <tr>
-      <th>#</th>
       <th>이메일</th>
-      <th>이름</th>
-      <th>권한</th>
+      <th>비밀번호</th>
       <th>관리</th>
     </tr>
     </thead>
-    <tbody>
-    <tr>
-      <td>1</td>
-      <td>user1@email.com</td>
-      <td>홍길동</td>
-      <td>일반 사용자</td>
-      <td>
-        <button class="btn btn-sm btn-primary">수정</button>
-        <button class="btn btn-sm btn-danger">삭제</button>
-      </td>
-    </tr>
-    <!-- 사용자 반복 -->
-    </tbody>
+    <tbody id="userTableBody"></tbody>
   </table>
 
   <h2 class="mt-5">⚙ 시스템 설정</h2>
@@ -57,17 +40,46 @@
       <label for="defaultFocus" class="form-label">기본 집중 시간 (분)</label>
       <input type="number" class="form-control" id="defaultFocus" value="25">
     </div>
-    <div class="mb-3">
-      <label for="notificationToggle" class="form-label">알림 기능</label>
-      <select class="form-select" id="notificationToggle">
-        <option selected>사용</option>
-        <option>사용 안 함</option>
-      </select>
-    </div>
-    <button class="btn btn-success">설정 저장</button>
+    <button type="button" class="btn btn-success" onclick="saveSettings()">저장</button>
   </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function loadUsers() {
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = '';
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const value = localStorage.getItem(key);
+
+      // 로그인 정보 또는 설정값은 제외
+      if (key === "system_focus_time" || key === "loggedInUser") continue;
+
+      const row = `
+          <tr>
+            <td>${key}</td>
+            <td>${value}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteUser('${key}')">삭제</button></td>
+          </tr>
+        `;
+      tbody.innerHTML += row;
+
+    }
+  }
+
+  function deleteUser(email) {
+    localStorage.removeItem(email);
+    loadUsers();
+  }
+
+  function saveSettings() {
+    const time = document.getElementById('defaultFocus').value;
+    localStorage.setItem('system_focus_time', time);
+    alert('설정이 저장되었습니다!');
+  }
+
+  window.onload = loadUsers;
+</script>
+
 </body>
 </html>

@@ -2,63 +2,103 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>통계 보기</title>
+  <title>📊 집중 통계</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light p-5">
+<body class="bg-light p-4">
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="main.html">Pomodoro</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link text-white" href="timer.html">⏱ 타이머</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="set-goal.html">🎯 목표 설정</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="progress.html">📈 진행 상태</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="statistics.html">📊 통계</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="settings.html">⚙ 설정</a></li>
         <li class="nav-item">
-          <a class="nav-link active text-white" href="timer.html">⏱ 타이머</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" href="set-goal.html">🎯 목표 설정</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" href="progress.html">📈 진행 상태</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" href="statistics.html">📊 통계 보기</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" href="settings.html">⚙ 설정</a>
+          <button class="btn btn-outline-light ms-3" id="logoutBtn">🚪 로그아웃</button>
         </li>
       </ul>
-      <!-- 로그인/로그아웃 영역 -->
-      <ul class="navbar-nav ms-auto">
-        <!-- 로그인 상태가 아니면 로그인 버튼 -->
-        <li class="nav-item">
-          <a class="nav-link text-white" href="login.html">🔐 로그인</a>
-        </li>
-
-        <!-- 로그인 상태일 때는 로그아웃 (아래 줄을 사용하려면 로그인 처리 로직 필요) -->
-        <!--
-        <li class="nav-item">
-          <span class="navbar-text text-white me-2">홍길동님</span>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" href="logout.html">🚪 로그아웃</a>
-        </li>
-        -->
     </div>
   </div>
 </nav>
 
 <div class="container">
-  <h2>📊 나의 통계</h2>
-  <ul class="list-group">
-    <li class="list-group-item">이번 주 집중 시간: 6시간</li>
-    <li class="list-group-item">총 완료 세션: 18</li>
-    <li class="list-group-item">평균 세션 시간: 25분</li>
+  <h2 class="mb-4">📊 집중 통계</h2>
+
+  <!-- 기본 통계 -->
+  <ul class="list-group mb-4">
+    <li class="list-group-item">누적 완료 세션: <span id="totalSessions">0</span> 회</li>
+    <li class="list-group-item">누적 집중 시간: <span id="focusTime">0</span> 분</li>
+    <li class="list-group-item">오늘 목표 세션: <span id="goalCount">0</span></li>
+  </ul>
+
+  <!-- ✅ 목표 달성 보상 -->
+  <div id="rewardBox" class="alert alert-success d-none fw-bold text-center"></div>
+  <p class="mb-4">보유 포인트: <strong id="points">0</strong>점</p>
+
+  <!-- ✅ 집중 점수/레벨 -->
+  <div class="mb-4">
+    <h5>🧠 집중 점수: <span id="score">0</span>점</h5>
+    <h6>레벨: <span id="level">초보 집중러</span></h6>
+  </div>
+
+  <!-- ✅ 일별 히스토리 -->
+  <h4 class="mt-5">📅 일별 세션 기록</h4>
+  <ul class="list-group" id="historyList">
+    <!-- 자동 삽입 -->
   </ul>
 </div>
+
+<script>
+  const totalSessions = parseInt(localStorage.getItem('session_completed')) || 0;
+  const goal = parseInt(localStorage.getItem('daily_goal')) || 0;
+  const focusTime = totalSessions * (parseInt(localStorage.getItem('system_focus_time')) || 25);
+  const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+  let points = parseInt(localStorage.getItem('user_points')) || 0;
+
+  // 통계 기본값
+  document.getElementById('totalSessions').textContent = totalSessions;
+  document.getElementById('focusTime').textContent = focusTime;
+  document.getElementById('goalCount').textContent = goal;
+
+  // ✅ 목표 달성 보상
+  if (goal > 0 && totalSessions >= goal) {
+    const rewardBox = document.getElementById('rewardBox');
+    rewardBox.textContent = "🎉 오늘의 목표 달성! 포인트 +10점!";
+    rewardBox.classList.remove("d-none");
+
+    // 하루 1회만 보상 적용
+    const rewardDate = localStorage.getItem("lastRewardDate");
+    if (rewardDate !== today) {
+      points += 10;
+      localStorage.setItem('user_points', points);
+      localStorage.setItem('lastRewardDate', today);
+    }
+  }
+  document.getElementById('points').textContent = points;
+
+  // ✅ 집중 점수 / 레벨
+  document.getElementById('score').textContent = points;
+  const level = points < 30 ? "초보 집중러" :
+          points < 70 ? "꾸준한 집중러" : "전설의 포모도로";
+  document.getElementById('level').textContent = level;
+
+  // ✅ 일별 세션 기록 출력
+  const historyList = document.getElementById('historyList');
+  for (let key in localStorage) {
+    if (key.startsWith("session_")) {
+      const session = JSON.parse(localStorage.getItem(key));
+      const li = document.createElement("li");
+      li.className = "list-group-item";
+      li.textContent = `${key.replace("session_", "")} - ${session.duration}분 - ${session.note || "메모 없음"}`;
+      historyList.appendChild(li);
+    }
+  }
+</script>
+
 </body>
 </html>

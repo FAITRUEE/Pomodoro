@@ -29,24 +29,20 @@
 <div class="container">
   <h2 class="mb-4">📊 집중 통계</h2>
 
-  <!-- 기본 통계 -->
   <ul class="list-group mb-4">
     <li class="list-group-item">누적 완료 세션: <span id="totalSessions">0</span> 회</li>
     <li class="list-group-item">누적 집중 시간: <span id="focusTime">0</span> 분</li>
     <li class="list-group-item">오늘 목표 세션: <span id="goalCount">0</span></li>
   </ul>
 
-  <!-- 목표 달성 보상 -->
   <div id="rewardBox" class="alert alert-success d-none fw-bold text-center"></div>
   <p class="mb-4">보유 포인트: <strong id="points">0</strong>점</p>
 
-  <!-- 집중 점수/레벨 -->
   <div class="mb-4">
     <h5>🧠 집중 점수: <span id="score">0</span>점</h5>
     <h6>레벨: <span id="level">초보 집중러</span></h6>
   </div>
 
-  <!-- 일별 히스토리 -->
   <h4 class="mt-5">📅 일별 세션 기록</h4>
   <ul class="list-group" id="historyList"></ul>
 </div>
@@ -69,12 +65,10 @@
   const focusMin = totalSessions * (parseInt(localStorage.getItem(focusKey)) || 25);
   let points = parseInt(localStorage.getItem(pointKey)) || 0;
 
-  // 통계 표시
   document.getElementById("totalSessions").textContent = totalSessions;
   document.getElementById("focusTime").textContent = focusMin;
   document.getElementById("goalCount").textContent = goal;
 
-  // ✅ 목표 달성 보상
   if (goal > 0 && totalSessions >= goal) {
     const rewardBox = document.getElementById('rewardBox');
     rewardBox.textContent = "🎉 오늘의 목표 달성! 포인트 +10점!";
@@ -91,13 +85,11 @@
   document.getElementById("points").textContent = points;
   document.getElementById("score").textContent = points;
 
-  // ✅ 레벨 계산
   const level = points < 30 ? "초보 집중러" :
           points < 70 ? "꾸준한 집중러" :
                   "전설의 포모도로";
   document.getElementById("level").textContent = level;
 
-  // ✅ 세션 기록 출력
   const historyList = document.getElementById("historyList");
   historyList.innerHTML = "";
 
@@ -125,7 +117,6 @@
     historyList.appendChild(li);
   });
 
-  // 로그아웃
   document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("loggedInUser");
     window.location.href = "login.html";

@@ -55,7 +55,6 @@
     const user = localStorage.getItem("loggedInUser");
     if (!user) window.location.href = "login.html";
 
-    // 기본값 또는 유저별 설정 불러오기
     function getFocusTime() {
         return (parseInt(localStorage.getItem(`focus_time_${user}`)) || 25) * 60;
     }
@@ -66,7 +65,6 @@
         return (parseInt(localStorage.getItem(`long_break_${user}`)) || 15) * 60;
     }
 
-    // 날짜 확인하여 세션 초기화
     const todayStr = new Date().toDateString();
     const lastDate = localStorage.getItem(`lastActiveDate_${user}`);
     if (lastDate !== todayStr) {
@@ -210,7 +208,7 @@
 
         currentPhase = 'break';
         updateDisplay();
-        saveTimerState(); // 상태 저장
+        saveTimerState();
         noteBox.value = '';
     }
 
@@ -219,7 +217,6 @@
         window.location.href = "login.html";
     });
 
-    // 초기 실행
     loadTimerState();
     updateDisplay();
 </script>

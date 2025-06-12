@@ -96,8 +96,7 @@
             messageBox.classList.add('error');
             return;
         }
-
-        // 로그인 성공
+        
         localStorage.setItem("loggedInUser", email);
         messageBox.textContent = "✅ 로그인 성공!";
         messageBox.classList.remove('error');

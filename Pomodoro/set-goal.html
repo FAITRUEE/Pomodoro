@@ -46,7 +46,6 @@
 
   const goalKey = `goal_${user}`;
 
-  // 기존 목표 불러오기
   const existingGoal = localStorage.getItem(goalKey);
   if (existingGoal) {
     document.getElementById("goalInput").value = existingGoal;

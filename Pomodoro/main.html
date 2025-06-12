@@ -8,7 +8,6 @@
 </head>
 <body class="bg-light p-4">
 
-<!-- 네비게이션 바 -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="main.html">Pomodoro</a>
@@ -27,11 +26,9 @@
   </div>
 </nav>
 
-<!-- 메인 콘텐츠 -->
 <div class="container text-center">
   <h2 class="mb-4">🎉 환영합니다! 집중을 시작해볼까요?</h2>
 
-  <!-- 집중 요약 카드 -->
   <div class="row row-cols-1 row-cols-md-2 g-4 mt-3">
     <div class="col">
       <div class="card border-success h-100 text-center">
@@ -55,24 +52,20 @@
 </div>
 
 <script>
-  // 로그인 확인
   const user = localStorage.getItem("loggedInUser");
   if (!user) {
     alert("로그인 후 이용해주세요.");
     window.location.href = "login.html";
   }
 
-  // 키 이름들 정의
   const sessionKey = `session_completed_${user}`;
   const goalKey = `goal_${user}`;
   const pointsKey = `user_points_${user}`;
 
-  // 데이터 불러오기
   const completed = parseInt(localStorage.getItem(sessionKey)) || 0;
   const goal = parseInt(localStorage.getItem(goalKey)) || 0;
   const points = parseInt(localStorage.getItem(pointsKey)) || 0;
 
-  // 포인트 & 레벨 표시
   document.getElementById("points").textContent = points;
 
   const level = points < 30 ? "초보 집중러" :
@@ -80,11 +73,9 @@
                   "전설의 포모도로";
   document.getElementById("level").textContent = level;
 
-  // 진행률 계산
   const progress = goal > 0 ? Math.min(Math.round((completed / goal) * 100), 100) : 0;
   document.getElementById("progressText").textContent = progress + "%";
 
-  // 로그아웃 처리
   document.getElementById("logoutBtn").addEventListener("click", function () {
     localStorage.removeItem("loggedInUser");
     window.location.href = "login.html";

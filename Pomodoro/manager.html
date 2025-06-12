@@ -73,7 +73,6 @@
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
 
-      // 사용자 정보 외의 데이터 건너뛰기
       if (
               key.startsWith("session_") ||
               key.startsWith("goal_") ||

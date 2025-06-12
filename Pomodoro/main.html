@@ -51,34 +51,44 @@
       </div>
     </div>
   </div>
+  <a href="timer.html" class="btn btn-danger btn-lg mt-3">⏱ 타이머 시작하기</a>
 </div>
 
 <script>
-  // 로그인 체크
-  if (!localStorage.getItem("loggedInUser")) {
+  // 로그인 확인
+  const user = localStorage.getItem("loggedInUser");
+  if (!user) {
     alert("로그인 후 이용해주세요.");
     window.location.href = "login.html";
   }
 
-  // 로그아웃
+  // 키 이름들 정의
+  const sessionKey = `session_completed_${user}`;
+  const goalKey = `goal_${user}`;
+  const pointsKey = `user_points_${user}`;
+
+  // 데이터 불러오기
+  const completed = parseInt(localStorage.getItem(sessionKey)) || 0;
+  const goal = parseInt(localStorage.getItem(goalKey)) || 0;
+  const points = parseInt(localStorage.getItem(pointsKey)) || 0;
+
+  // 포인트 & 레벨 표시
+  document.getElementById("points").textContent = points;
+
+  const level = points < 30 ? "초보 집중러" :
+          points < 70 ? "꾸준한 집중러" :
+                  "전설의 포모도로";
+  document.getElementById("level").textContent = level;
+
+  // 진행률 계산
+  const progress = goal > 0 ? Math.min(Math.round((completed / goal) * 100), 100) : 0;
+  document.getElementById("progressText").textContent = progress + "%";
+
+  // 로그아웃 처리
   document.getElementById("logoutBtn").addEventListener("click", function () {
     localStorage.removeItem("loggedInUser");
     window.location.href = "login.html";
   });
-
-  // 점수/레벨/진행률 계산
-  const completed = parseInt(localStorage.getItem('session_completed')) || 0;
-  const goal = parseInt(localStorage.getItem('daily_goal')) || 0;
-  const points = parseInt(localStorage.getItem('user_points')) || 0;
-
-  document.getElementById('points').textContent = points;
-
-  const level = points < 30 ? "초보 집중러" :
-          points < 70 ? "꾸준한 집중러" : "전설의 포모도로";
-  document.getElementById('level').textContent = level;
-
-  const progress = goal > 0 ? Math.min(Math.round((completed / goal) * 100), 100) : 0;
-  document.getElementById('progressText').textContent = progress + "%";
 </script>
 
 </body>

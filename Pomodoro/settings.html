@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>설정</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>⚙ 설정</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body class="bg-light p-5">
-<!-- 네비게이션 바 -->
+<body class="bg-light p-4">
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="main.html">Pomodoro</a>
@@ -25,44 +25,79 @@
     </div>
   </div>
 </nav>
+
 <div class="container">
-  <h2 class="mb-4">⚙️ 설정</h2>
+  <h2>⚙ 타이머 설정</h2>
 
-  <form id="settingsForm">
-    <div class="mb-3">
-      <label for="focusTime" class="form-label">기본 집중 시간 (분)</label>
-      <input type="number" class="form-control" id="focusTime" placeholder="예: 25" required>
-    </div>
+  <div class="mb-3">
+    <label for="focusInput" class="form-label">집중 시간 (분)</label>
+    <input type="number" class="form-control" id="focusInput" placeholder="기본: 25">
+  </div>
 
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" id="soundAlert">
-      <label class="form-check-label" for="soundAlert">
-        🔔 타이머 종료 시 소리 알림 사용
-      </label>
-    </div>
+  <div class="mb-3">
+    <label for="shortInput" class="form-label">짧은 휴식 시간 (분)</label>
+    <input type="number" class="form-control" id="shortInput" placeholder="기본: 5">
+  </div>
 
-    <button type="submit" class="btn btn-danger">저장</button>
-    <div id="message" class="mt-3 text-success"></div>
-  </form>
+  <div class="mb-3">
+    <label for="longInput" class="form-label">긴 휴식 시간 (분)</label>
+    <input type="number" class="form-control" id="longInput" placeholder="기본: 15">
+  </div>
+
+  <button class="btn btn-danger me-2" onclick="saveSettings()">저장</button>
+  <button class="btn btn-secondary" onclick="resetSettings()">초기화</button>
+
+  <p class="text-success mt-3 fw-bold" id="message"></p>
 </div>
 
 <script>
-  const focusInput = document.getElementById('focusTime');
-  const soundCheckbox = document.getElementById('soundAlert');
-  const msg = document.getElementById('message');
+  const user = localStorage.getItem("loggedInUser");
+  if (!user) {
+    window.location.href = "login.html";
+  }
 
-  // 기존 설정 불러오기
-  const savedFocus = localStorage.getItem('system_focus_time');
-  const soundSetting = localStorage.getItem('sound_enabled') === 'true';
+  // 키 통일 (timer.html에서 사용하는 키명)
+  const focusKey = `focus_time_${user}`;
+  const shortKey = `short_break_${user}`;
+  const longKey = `long_break_${user}`;
 
-  if (savedFocus) focusInput.value = savedFocus;
-  soundCheckbox.checked = soundSetting;
+  // 초기값 로드
+  document.getElementById("focusInput").value = localStorage.getItem(focusKey) || 25;
+  document.getElementById("shortInput").value = localStorage.getItem(shortKey) || 5;
+  document.getElementById("longInput").value = localStorage.getItem(longKey) || 15;
 
-  document.getElementById('settingsForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    localStorage.setItem('system_focus_time', focusInput.value);
-    localStorage.setItem('sound_enabled', soundCheckbox.checked);
-    msg.textContent = "설정이 저장되었습니다!";
+  function saveSettings() {
+    const focus = parseInt(document.getElementById("focusInput").value);
+    const short = parseInt(document.getElementById("shortInput").value);
+    const long = parseInt(document.getElementById("longInput").value);
+
+    if (isNaN(focus) || isNaN(short) || isNaN(long)) {
+      document.getElementById("message").textContent = "❗ 모든 필드에 숫자를 입력해주세요.";
+      return;
+    }
+
+    localStorage.setItem(focusKey, focus);
+    localStorage.setItem(shortKey, short);
+    localStorage.setItem(longKey, long);
+
+    document.getElementById("message").textContent = "✅ 설정이 저장되었습니다!";
+  }
+
+  function resetSettings() {
+    localStorage.setItem(focusKey, 25);
+    localStorage.setItem(shortKey, 5);
+    localStorage.setItem(longKey, 15);
+
+    document.getElementById("focusInput").value = 25;
+    document.getElementById("shortInput").value = 5;
+    document.getElementById("longInput").value = 15;
+
+    document.getElementById("message").textContent = "🔄 기본값으로 초기화되었습니다.";
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
   });
 </script>
 

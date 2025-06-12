@@ -36,34 +36,43 @@
     <li class="list-group-item">오늘 목표 세션: <span id="goalCount">0</span></li>
   </ul>
 
-  <!-- ✅ 목표 달성 보상 -->
+  <!-- 목표 달성 보상 -->
   <div id="rewardBox" class="alert alert-success d-none fw-bold text-center"></div>
   <p class="mb-4">보유 포인트: <strong id="points">0</strong>점</p>
 
-  <!-- ✅ 집중 점수/레벨 -->
+  <!-- 집중 점수/레벨 -->
   <div class="mb-4">
     <h5>🧠 집중 점수: <span id="score">0</span>점</h5>
     <h6>레벨: <span id="level">초보 집중러</span></h6>
   </div>
 
-  <!-- ✅ 일별 히스토리 -->
+  <!-- 일별 히스토리 -->
   <h4 class="mt-5">📅 일별 세션 기록</h4>
-  <ul class="list-group" id="historyList">
-    <!-- 자동 삽입 -->
-  </ul>
+  <ul class="list-group" id="historyList"></ul>
 </div>
 
 <script>
-  const totalSessions = parseInt(localStorage.getItem('session_completed')) || 0;
-  const goal = parseInt(localStorage.getItem('daily_goal')) || 0;
-  const focusTime = totalSessions * (parseInt(localStorage.getItem('system_focus_time')) || 25);
-  const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
-  let points = parseInt(localStorage.getItem('user_points')) || 0;
+  const user = localStorage.getItem("loggedInUser");
+  if (!user) {
+    window.location.href = "login.html";
+  }
 
-  // 통계 기본값
-  document.getElementById('totalSessions').textContent = totalSessions;
-  document.getElementById('focusTime').textContent = focusTime;
-  document.getElementById('goalCount').textContent = goal;
+  const sessionKey = `session_completed_${user}`;
+  const goalKey = `goal_${user}`;
+  const focusKey = `focus_time_${user}`;
+  const pointKey = `user_points_${user}`;
+  const rewardKey = `lastRewardDate_${user}`;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const totalSessions = parseInt(localStorage.getItem(sessionKey)) || 0;
+  const goal = parseInt(localStorage.getItem(goalKey)) || 0;
+  const focusMin = totalSessions * (parseInt(localStorage.getItem(focusKey)) || 25);
+  let points = parseInt(localStorage.getItem(pointKey)) || 0;
+
+  // 통계 표시
+  document.getElementById("totalSessions").textContent = totalSessions;
+  document.getElementById("focusTime").textContent = focusMin;
+  document.getElementById("goalCount").textContent = goal;
 
   // ✅ 목표 달성 보상
   if (goal > 0 && totalSessions >= goal) {
@@ -71,33 +80,56 @@
     rewardBox.textContent = "🎉 오늘의 목표 달성! 포인트 +10점!";
     rewardBox.classList.remove("d-none");
 
-    // 하루 1회만 보상 적용
-    const rewardDate = localStorage.getItem("lastRewardDate");
+    const rewardDate = localStorage.getItem(rewardKey);
     if (rewardDate !== today) {
       points += 10;
-      localStorage.setItem('user_points', points);
-      localStorage.setItem('lastRewardDate', today);
+      localStorage.setItem(pointKey, points);
+      localStorage.setItem(rewardKey, today);
     }
   }
-  document.getElementById('points').textContent = points;
 
-  // ✅ 집중 점수 / 레벨
-  document.getElementById('score').textContent = points;
+  document.getElementById("points").textContent = points;
+  document.getElementById("score").textContent = points;
+
+  // ✅ 레벨 계산
   const level = points < 30 ? "초보 집중러" :
-          points < 70 ? "꾸준한 집중러" : "전설의 포모도로";
-  document.getElementById('level').textContent = level;
+          points < 70 ? "꾸준한 집중러" :
+                  "전설의 포모도로";
+  document.getElementById("level").textContent = level;
 
-  // ✅ 일별 세션 기록 출력
-  const historyList = document.getElementById('historyList');
-  for (let key in localStorage) {
-    if (key.startsWith("session_")) {
-      const session = JSON.parse(localStorage.getItem(key));
-      const li = document.createElement("li");
-      li.className = "list-group-item";
-      li.textContent = `${key.replace("session_", "")} - ${session.duration}분 - ${session.note || "메모 없음"}`;
-      historyList.appendChild(li);
-    }
-  }
+  // ✅ 세션 기록 출력
+  const historyList = document.getElementById("historyList");
+  historyList.innerHTML = "";
+
+  const sessions = Object.keys(localStorage)
+          .filter(key => key.startsWith(`session_${user}_`))
+          .sort((a, b) => {
+            const partsA = a.split("_");
+            const partsB = b.split("_");
+            const dateA = partsA[2];
+            const dateB = partsB[2];
+            const numA = parseInt(partsA[3]) || 0;
+            const numB = parseInt(partsB[3]) || 0;
+            if (dateA !== dateB) return dateB.localeCompare(dateA);
+            return numB - numA;
+          });
+
+  sessions.forEach(key => {
+    const session = JSON.parse(localStorage.getItem(key));
+    const parts = key.replace(`session_${user}_`, "").split("_");
+    const date = parts[0];
+    const index = parts[1];
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+    li.textContent = `${date} #${index} - ${session.duration}분 - ${session.note || "메모 없음"}`;
+    historyList.appendChild(li);
+  });
+
+  // 로그아웃
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+  });
 </script>
 
 </body>

@@ -23,62 +23,117 @@
 
 <div class="container">
   <h2 class="mb-4">👥 사용자 목록</h2>
-  <table class="table table-bordered bg-white">
+  <table class="table table-bordered bg-white text-center align-middle">
     <thead class="table-dark">
     <tr>
+      <th>이름</th>
       <th>이메일</th>
-      <th>비밀번호</th>
+      <th>권한</th>
+      <th>최근 메모</th>
       <th>관리</th>
     </tr>
     </thead>
     <tbody id="userTableBody"></tbody>
   </table>
 
-  <h2 class="mt-5">⚙ 시스템 설정</h2>
+  <h2 class="mt-5">⚙ 시스템 기본 설정</h2>
   <form>
     <div class="mb-3">
       <label for="defaultFocus" class="form-label">기본 집중 시간 (분)</label>
       <input type="number" class="form-control" id="defaultFocus" value="25">
+      <div class="form-text">※ 이 설정은 모든 사용자에게 공통으로 적용됩니다.</div>
     </div>
     <button type="button" class="btn btn-success" onclick="saveSettings()">저장</button>
   </form>
 </div>
 
 <script>
+  function getLatestNoteByEmail(email) {
+    const notes = [];
+
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(`session_${email}_`)) {
+        try {
+          const session = JSON.parse(localStorage.getItem(key));
+          if (session && session.note) {
+            notes.push({ note: session.note, date: new Date(session.completedAt) });
+          }
+        } catch {}
+      }
+    });
+
+    notes.sort((a, b) => b.date - a.date);
+    return notes.length > 0 ? notes[0].note : "작성된 메모 없음";
+  }
+
   function loadUsers() {
-    const tbody = document.getElementById('userTableBody');
-    tbody.innerHTML = '';
+    const tbody = document.getElementById("userTableBody");
+    tbody.innerHTML = "";
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      const value = localStorage.getItem(key);
 
-      // 로그인 정보 또는 설정값은 제외
-      if (key === "system_focus_time" || key === "loggedInUser") continue;
+      // 사용자 정보 외의 데이터 건너뛰기
+      if (
+              key.startsWith("session_") ||
+              key.startsWith("goal_") ||
+              key.startsWith("system_") ||
+              key.startsWith("user_points_") ||
+              key.startsWith("lastActiveDate_") ||
+              key.startsWith("timer_") ||
+              key === "loggedInUser"
+      ) continue;
 
-      const row = `
-          <tr>
-            <td>${key}</td>
-            <td>${value}</td>
-            <td><button class="btn btn-sm btn-danger" onclick="deleteUser('${key}')">삭제</button></td>
-          </tr>
-        `;
-      tbody.innerHTML += row;
-
+      try {
+        const user = JSON.parse(localStorage.getItem(key));
+        if (user && user.email && user.password) {
+          const note = getLatestNoteByEmail(user.email);
+          const row = `
+            <tr>
+              <td>${user.name || "-"}</td>
+              <td>${user.email}</td>
+              <td>${user.role || "user"}</td>
+              <td>${note}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteUser('${user.email}')">삭제</button></td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        }
+      } catch (e) {
+        continue;
+      }
     }
   }
 
   function deleteUser(email) {
-    localStorage.removeItem(email);
-    loadUsers();
+    if (confirm(`정말로 ${email} 사용자를 삭제하시겠습니까?`)) {
+      localStorage.removeItem(email);
+
+      // 해당 사용자의 관련 키도 삭제 (예: session_, goal_, points_ 등)
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes(email)) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      alert("✅ 사용자 정보가 삭제되었습니다.");
+      loadUsers();
+    }
   }
 
   function saveSettings() {
-    const time = document.getElementById('defaultFocus').value;
-    localStorage.setItem('system_focus_time', time);
-    alert('설정이 저장되었습니다!');
+    const time = document.getElementById("defaultFocus").value;
+    localStorage.setItem("system_focus_time", time);
+    alert("✅ 시스템 기본 설정이 저장되었습니다.");
   }
 
-  window.onload = loadUsers;
+  window.onload = () => {
+    loadUsers();
+    const saved = localStorage.getItem("system_focus_time");
+    if (saved) {
+      document.getElementById("defaultFocus").value = saved;
+    }
+  };
 </script>
 
 </body>

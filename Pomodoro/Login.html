@@ -21,12 +21,13 @@
         .btn-login:hover {
             background-color: #e57373;
         }
-        .error-message {
-            color: red;
+        .message {
             font-size: 14px;
             margin-top: 10px;
             text-align: center;
         }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 <body class="bg-light">
@@ -34,7 +35,7 @@
 <div class="login-container">
     <h2 class="text-center mb-4">🔐 로그인</h2>
 
-    <form id="loginForm">
+    <form id="loginForm" autocomplete="off">
         <div class="mb-3">
             <label for="email" class="form-label">이메일</label>
             <input type="email" class="form-control" id="email" required>
@@ -46,7 +47,7 @@
         </div>
 
         <button type="submit" class="btn btn-login w-100">로그인</button>
-        <div id="error" class="error-message"></div>
+        <div id="message" class="message"></div>
     </form>
 
     <div class="text-center mt-3">
@@ -56,41 +57,56 @@
 
 <script>
     const loginForm = document.getElementById('loginForm');
-    const errorBox = document.getElementById('error');
+    const messageBox = document.getElementById('message');
 
     loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
+        messageBox.textContent = '';
+        messageBox.className = 'message';
+
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
-        const rawUserData = localStorage.getItem(email);
+        const userRaw = localStorage.getItem(email);
 
-        if (!rawUserData) {
-            errorBox.textContent = "등록되지 않은 이메일입니다.";
+        if (!userRaw) {
+            messageBox.textContent = "❌ 등록되지 않은 이메일입니다.";
+            messageBox.classList.add('error');
             return;
         }
 
         let userData;
         try {
-            userData = JSON.parse(rawUserData);
-        } catch {
-            errorBox.textContent = "사용자 정보가 손상되었습니다.";
+            userData = JSON.parse(userRaw);
+        } catch (err) {
+            messageBox.textContent = "❌ 사용자 정보가 손상되었습니다.";
+            messageBox.classList.add('error');
             return;
         }
 
-        if (userData.password === password) {
-            // 로그인 성공
-            localStorage.setItem("loggedInUser", email);
-
-            if (userData.role === "manager") {
-                window.location.href = "manager.html";
-            } else {
-                window.location.href = "main.html";
-            }
-        } else {
-            errorBox.textContent = "비밀번호가 올바르지 않습니다.";
+        if (!userData.password || !userData.role) {
+            messageBox.textContent = "❌ 잘못된 사용자 데이터입니다.";
+            messageBox.classList.add('error');
+            return;
         }
+
+        if (userData.password !== password) {
+            messageBox.textContent = "❌ 비밀번호가 일치하지 않습니다.";
+            messageBox.classList.add('error');
+            return;
+        }
+
+        // 로그인 성공
+        localStorage.setItem("loggedInUser", email);
+        messageBox.textContent = "✅ 로그인 성공!";
+        messageBox.classList.remove('error');
+        messageBox.classList.add('success');
+
+        setTimeout(() => {
+            const target = userData.role === "manager" ? "manager.html" : "main.html";
+            window.location.href = target;
+        }, 800);
     });
 </script>
 
